@@ -1,0 +1,75 @@
+CREATE DATABASE IF NOT EXISTS fruit_shop;
+USE fruit_shop;
+
+CREATE TABLE IF NOT EXISTS users(
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ username VARCHAR(50) UNIQUE NOT NULL,
+ password VARCHAR(255) NOT NULL,
+ role ENUM('ADMIN','CASHIER') NOT NULL DEFAULT 'CASHIER',
+ active BOOLEAN DEFAULT TRUE
+);
+INSERT IGNORE INTO users(username,password,role) VALUES ('admin','admin123','ADMIN'),('cashier','cashier123','CASHIER');
+
+CREATE TABLE IF NOT EXISTS categories(
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ name VARCHAR(100) UNIQUE NOT NULL
+);
+INSERT IGNORE INTO categories(name) VALUES ('Citrus'),('Tropical'),('Berries'),('Other');
+
+CREATE TABLE IF NOT EXISTS suppliers(
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ name VARCHAR(120) NOT NULL, phone VARCHAR(30), email VARCHAR(120), address VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS customers(
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ name VARCHAR(120) NOT NULL, phone VARCHAR(30), email VARCHAR(120), address VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS products(
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ code VARCHAR(50) UNIQUE NOT NULL,
+ name VARCHAR(120) NOT NULL,
+ category_id INT, supplier_id INT,
+ unit VARCHAR(20) DEFAULT 'kg',
+ buying_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+ selling_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+ stock DECIMAL(10,2) NOT NULL DEFAULT 0,
+ reorder_level DECIMAL(10,2) NOT NULL DEFAULT 5,
+ active BOOLEAN DEFAULT TRUE,
+ FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE SET NULL,
+ FOREIGN KEY(supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS sales(
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ invoice_no VARCHAR(50) UNIQUE NOT NULL,
+ customer_id INT NULL,
+ user_id INT NULL,
+ sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ subtotal DECIMAL(12,2) NOT NULL,
+ discount DECIMAL(12,2) NOT NULL DEFAULT 0,
+ tax DECIMAL(12,2) NOT NULL DEFAULT 0,
+ total DECIMAL(12,2) NOT NULL,
+ payment_method VARCHAR(30) DEFAULT 'CASH',
+ FOREIGN KEY(customer_id) REFERENCES customers(id) ON DELETE SET NULL,
+ FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS sale_items(
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ sale_id INT NOT NULL,
+ product_id INT NOT NULL,
+ quantity DECIMAL(10,2) NOT NULL,
+ unit_price DECIMAL(10,2) NOT NULL,
+ line_total DECIMAL(12,2) NOT NULL,
+ FOREIGN KEY(sale_id) REFERENCES sales(id) ON DELETE CASCADE,
+ FOREIGN KEY(product_id) REFERENCES products(id)
+);
+
+INSERT IGNORE INTO products(code,name,unit,buying_price,selling_price,stock,reorder_level)
+VALUES
+('APL001','Apple','kg',450,600,25,5),
+('BAN001','Banana','kg',180,250,40,8),
+('ORG001','Orange','kg',300,420,18,5),
+('MAN001','Mango','kg',350,500,12,5);
